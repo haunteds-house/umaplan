@@ -29,7 +29,7 @@ Your imports stay in IndexedDB on the current browser and site origin. No teleme
 
 ## GitHub Pages
 
-The workflow in `.github/workflows/pages.yml` tests, builds, and deploys pushes to `main`. In repository **Settings → Pages**, the source must be **GitHub Actions**. The workflow attempts to enable Pages, but GitHub may require an owner to select this source once because the workflow token cannot administer repository settings.
+The workflow in `.github/workflows/pages.yml` tests, builds, and deploys pushes to `main`. In repository **Settings → Pages**, the source must be **GitHub Actions**. An owner must select this source once before deployment. The workflow intentionally does not use `enablement: true`: its token has deployment permissions, but cannot create the Pages site. After enabling Pages, open Actions → Test and deploy GitHub Pages → Run workflow, selecting `main`.
 
 All paths are relative, including the worker and JSON resources, so deployment under `/umaplan/` works. Hash navigation avoids server-side routing requirements.
 
