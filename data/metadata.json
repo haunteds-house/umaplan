@@ -1,0 +1,12 @@
+{
+  "region": "Global",
+  "retrieved": "2026-10-29",
+  "guideBundle": "https://uma.guide/assets/chunks/uma-data.bcmgdWNZ.js",
+  "moeVersion": "1.35.2-10008400-timeline-91a0d26b028c-jp-14373e21de9c-courses-cab407a733da-planner-a4ff0b44017a-geometry-782caf214e3d-jp-catalog-6dc894b54b36-master-e5364f1ceff2",
+  "counts": {
+    "characters": 112,
+    "supports": 265,
+    "skills": 741,
+    "factors": 448
+  }
+}
