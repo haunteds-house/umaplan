@@ -61,3 +61,46 @@ Open `http://localhost:8080`. Opening `index.html` through `file://` is unsuppor
 ## Validation
 
 `npm test` runs 18 checks covering imports, ancestry, compatibility, independent probabilities, scenario aliases, gold/inspiration assumptions, target-free ranking, source integrity, and the search worker including pins. The production build passes. Browser checks covered synthetic JSON imports, affinity previews, learning controls, skill search, Sources, Variants, and artwork. No personal roster was available during development.
+
+## Veteran search and presets
+
+My Collection → Veterans and the planner's **Candidate filters** share Basic,
+Advanced and UQL search. Basic builds spark rules; Advanced adds stats, aptitudes,
+rating, characters, races, learned skills and affinity. Candidate filters apply to
+both parents before pair scoring and to imported-veteran slot pickers. Pinned
+parents excluded by a filter produce an explicit message.
+
+**Save preset** saves a named snapshot of the active mode, query, rules, text,
+sort and affinity target. Presets can be loaded or deleted from either panel and
+are included in workspace backups. Basic and Advanced share rules; **Edit as UQL**
+converts them into a separate editable query. UQL edits do not rewrite visual rules.
+
+The local UQL evaluator supports Boolean groups, comparisons, arithmetic (integer
+division), BETWEEN, IN/NOT IN, HAS/CONTAINS, HAS ALL/ANY, LIKE/ILIKE, scoped spark
+stars and `2x` copy thresholds. `Main`, `GP1`, `GP2` and `GP` refer to the veteran
+and its recorded parents; GP numeric predicates match either recorded parent.
+Unscoped spark thresholds sum all three. Functions include `contains`, `has`,
+`overlaps`, `has_all`, `spark_sum` and `any_spark`. `target = Maruzensky` and
+`sort by = Rating` directives can be separated by semicolons or top-level AND.
+Examples and available fields are shown inside each panel.
+
+This implements local roster searching, not uma.moe's remote database. Trainer,
+follower, borrowed support, owned-legacy comparison, database ranking functions,
+and skill-threshold expressions inside membership lists are not supported.
+Unknown/unsupported queries show errors and return no matches. Race-name search
+uses the bundled G1 catalog; other races require their saddle IDs. Affinity is a
+single candidate's target branch, not the complete final tree. Missing race
+histories do not pass predicates requiring their values. Old imports without a
+scenario must be reimported to use scenario filtering.
+
+## Parent-match probability summary
+
+Parent matches show the arithmetic mean of all requested outcome probabilities,
+an estimated probability of all requested outcomes in one run, and the expected
+number of identical attempts to obtain that complete result (`1 / joint chance`).
+The joint estimate multiplies distinct outcomes **assuming independence**. Known
+normal/plus aliases count once. Cross-skill dependence and career availability
+are not inferred, so this is an estimate, not a guarantee. No desired sparks gives
+“—”; any impossible outcome gives zero joint chance and infinite expected runs.
+In one-event mode, the estimate covers that event rather than both career events.
+These summaries do not change the existing weakest-spark-first ranking.

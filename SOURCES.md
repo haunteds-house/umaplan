@@ -43,3 +43,17 @@ No private game files, account exports, credentials, or external site applicatio
 - Gold/normal/◎ families follow skill ID families. Unique ranks and inherited versions use the published ID mappings. Absent technical versions are not fabricated. Scenario exchange pairs cover six Racing Spirit and five Ignited Spirit pairs, even where the Global catalog lacks plus-version technical details.
 - Artwork uses uma.guide's public `icon/uma/chr_icon_*`, `icon/skill/utx_ico_skill_*`, and `img/card/composite/tex_support_card_*_thumb.webp` routes. Outfit mappings come from the data bundle. Art remains owned by its respective rights holders and loads remotely.
 - Effect codes receive readable labels; Type28 is lane movement, with fractional values rendered as percentages. Underlying expressions and values remain intact.
+
+## Local search language and category correction
+
+- The public uma.moe UQL syntax reference, field definitions, compiler tests and
+  local veteran query behavior informed scopes, copy thresholds and readable
+  field names. The parser and visual controls here are original code; no upstream
+  application source is bundled. Backend-only functions are not implemented.
+- `Category101` in the public record for Carnival Bonus (1000011) is normalized
+  to `Special`, consistent with its related Carnival Bonus entry. The snapshot
+  refresh script applies the same correction.
+- Parent-match joint probability and run estimates are explicitly conditional on
+  independent outcomes and identical repeated attempts. Individual probabilities
+  remain based on the existing community model; the arithmetic mean is not used
+  as the probability of obtaining a complete result.

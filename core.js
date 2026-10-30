@@ -45,7 +45,7 @@ export function normalizeImport(input,filename,catalog) {
   if(kind==='trainees')return {id,cardId:Number(r.card_id),rarity:Number(r.rarity)||0,talent:Number(r.talent_level)||0};
   const node=nodeFromRaw(r,catalog);
   const parents=arr(r.succession_chara_array).filter(p=>[10,20].includes(Number(p.position_id))).sort((a,b)=>a.position_id-b.position_id).map(p=>({...nodeFromRaw(p,catalog),position:Number(p.position_id)}));
-  return {id,...node,parents,stats:Object.fromEntries(stats.map(s=>[s,Number(r[s])||0])),aptitudes:Object.fromEntries(aptitudes.map(([label,key])=>[label,Number(r[key])||0])),rating:Number(r.rank_score)||0,rarity:Number(r.rarity)||0,skills:arr(r.skill_array).map(s=>({id:Number(s.skill_id),level:Number(s.level)||1})),memo:String(r.memo??''),date:String(r.create_time??r.register_time??'')};
+  return {id,...node,parents,scenario:r.scenario_id==null?null:Number(r.scenario_id),stats:Object.fromEntries(stats.map(s=>[s,Number(r[s])||0])),aptitudes:Object.fromEntries(aptitudes.map(([label,key])=>[label,Number(r[key])||0])),rating:Number(r.rank_score)||0,rarity:Number(r.rarity)||0,skills:arr(r.skill_array).map(s=>({id:Number(s.skill_id),level:Number(s.level)||1})),memo:String(r.memo??''),date:String(r.create_time??r.register_time??'')};
  });
  return {kind,data,filename:String(filename),importedAt:new Date().toISOString()};
 }
@@ -151,12 +151,27 @@ export function desiredChance(engine,plan,id,odds) {
  const bought=plan.bought?.[id]??{};
  return creationChance(row?.copies??0,bought.inspirationOnly?'white':bought.tier)*(bought.inspirationOnly?inherit:1);
 }
+// Joint odds are an estimate: marginal probabilities do not establish independence.
+// Alias forms describe the same outcome, so do not multiply them twice.
+export function summarizeChances(chances,ids=[],aliases={}) {
+ if(!chances.length)return {average:null,allChance:null,expectedRuns:null};
+ if(chances.some(p=>!Number.isFinite(p)||p<0||p>1))throw Error('Invalid outcome probability.');
+ const groups=[];
+ chances.forEach((p,i)=>{
+  const keys=new Set([ids[i]??`index:${i}`,...(aliases[ids[i]]??[])]);
+  const overlaps=groups.filter(g=>[...keys].some(k=>g.keys.has(k)));
+  for(const g of overlaps){for(const key of g.keys)keys.add(key);p=Math.min(p,g.p);groups.splice(groups.indexOf(g),1);}
+  groups.push({keys,p});
+ });
+ const allChance=groups.reduce((p,g)=>p*g.p,1);
+ return {average:chances.reduce((s,p)=>s+p,0)/chances.length,allChance,expectedRuns:allChance?1/allChance:Infinity};
+}
 export function scorePair(engine,plan,a,b) {
  if(baseId(a.cardId)===baseId(b.cardId)||[a,b].some(x=>baseId(x.cardId)===baseId(plan.nodes[0].cardId)))return null;
  const nodes=pairNodes(plan.nodes[0],a,b),ev=plan.nodes[0].cardId?engine.evaluate(nodes,plan.parentRaceBonus):baselineEvaluation(nodes);
  if(!ev.complete)return null;
  const odds=engine.odds(nodes,ev,plan.rolls);
  const chances=plan.wanted.map(id=>desiredChance(engine,plan,id,odds));
- return {a:a.id,b:b.id,total:ev.total,baseline:!plan.nodes[0].cardId,min:chances.length?Math.min(...chances):0,sum:chances.reduce((s,c)=>s+c,0),chances};
+ return {a:a.id,b:b.id,total:ev.total,baseline:!plan.nodes[0].cardId,min:chances.length?Math.min(...chances):0,sum:chances.reduce((s,c)=>s+c,0),chances,...summarizeChances(chances,plan.wanted,engine.links.factorAliases)};
 }
 export const comparePairs=(a,b)=>b.min-a.min||b.sum-a.sum||b.total-a.total||String(a.a).localeCompare(String(b.a))||String(a.b).localeCompare(String(b.b));

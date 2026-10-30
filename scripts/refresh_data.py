@@ -61,6 +61,8 @@ def main():
         for s in race['win_saddles']:
             if s['win_saddle_type'] == 3:
                 races[str(s['saddle_id'])] = {'group': s['group_id'], 'name': race['name']}
+    for skill in extracted['skills']:
+        if skill.get('skillCategory') == 'Category101': skill['skillCategory'] = 'Special'
     data.update(extracted); data['races'] = races
     app_path = re.search(r'(?:src|href)="([^" ]*/app\.[^" ]+\.js)"', page)
     if not app_path: raise RuntimeError('App bundle missing for event dataset discovery.')
