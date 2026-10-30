@@ -15,3 +15,10 @@ max-level-at-that-LB assumptions, and MLB borrowed cards. It sums six marginal
 card scores (each evaluated with the other five fixed) as a relative deck index.
 That sum is not a simulated final-stat total. Scenario availability is selected
 by the user; a model preset does not establish that a scenario has launched.
+
+Local calculator adaptations: an optional `deckOutingDays` weight reserves the
+whole deck's outing turns in every scoring pass; without it the original
+per-candidate five-turn deduction remains. Training days cannot be negative,
+and bonding days are clamped to the available training window. The adapter uses
+five turns per type-6 card, an upstream allowance rather than an exact schedule.
+The deck search defaults to at most one Pal/Group card (user-adjustable).

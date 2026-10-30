@@ -75,3 +75,8 @@ No private game files, account exports, credentials, or external site applicatio
   not their potentially lower current level. Borrowed cards use MLB values.
   Missing model records are shown as unavailable; they are not assigned guessed
   effects. The model's reference numerical test is retained in our test suite.
+
+- Umaplan adapts the calculator to deduct the full deck's outing allowance in
+  every marginal evaluation (five turns per model type-6 Pal/Group card).
+  Bonding days are clamped to the available training days. The default one-card
+  Pal/Group limit is an adjustable planning preference, not a game rule.

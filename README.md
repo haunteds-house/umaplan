@@ -142,8 +142,14 @@ it does not alter the displayed spark probabilities. Setting training weight to
 zero restores skill-first comparison. With no desired outcomes, training alone
 breaks the choice (chance summaries remain unavailable).
 
-Deck search is bounded: a beam of 128 partial owned decks, then up to 64 distinct
-skill/type profiles with a borrowed card, evaluated against each parent pair.
+**Maximum Pal / Group cards** defaults to one and can be set from zero to six.
+This is a planning preference, not a game restriction. Each Pal/Group card reserves
+five shared outing turns in every card's scoring pass, following the upstream
+outing allowance. This is an estimate, not an exact career schedule.
+
+Deck search is bounded: up to 64 partial owned decks per Pal/Group count, then
+up to 32 distinct skill/type profiles per count with a borrowed card, evaluated
+against each parent pair. Keeping separate counts preserves non-Pal alternatives.
 It is not exhaustive and may miss better decks. Card levels, skill coverage,
 scenario comparisons and individual marginal contributions are shown in results.
 **Use pair** also saves the suggested support deck and model result in the plan.

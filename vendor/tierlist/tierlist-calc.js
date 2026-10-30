@@ -183,8 +183,11 @@ export function processCards(cards, weights, selectedCards) {
     // hits max bond) and the rainbow phase (after).
     let trainingDays =
       65 - weights.races[0] - weights.races[1] - weights.races[2]
-    if (cardType === GROUP_TYPE) trainingDays -= 5
-    let daysToBond = bondNeeded / weights.bondPerDay
+    // Umaplan: complete-deck callers reserve shared outing turns once for
+    // every card's scoring pass. Preserve upstream behavior when omitted.
+    trainingDays -= weights.deckOutingDays ?? (cardType === GROUP_TYPE ? 5 : 0)
+    trainingDays = Math.max(0, trainingDays)
+    let daysToBond = Math.max(0, Math.min(trainingDays, bondNeeded / weights.bondPerDay))
     let rainbowDays = trainingDays - daysToBond
 
     const chances = specialtyChances(card, weights)

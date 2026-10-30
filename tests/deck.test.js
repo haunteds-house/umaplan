@@ -44,3 +44,25 @@ test('advanced groups preserve mixed Boolean logic, exclusions and preset indepe
  const saved=cleanSearch(s);s.advanced.children[0].children[0].value='99999';assert.equal(saved.advanced.children[0].children[0].value,'10000');
  const old=cleanSearch({mode:'advanced',rules:[rule('Rating','>=','2')]});assert.ok(visualQuery(old).includes('Rating >= 2'));
 });
+test('Pal-heavy collections keep no-Pal alternatives and enforce the cap across owned and borrowed slots',()=>{
+ const p={...emptyPlan(),scenario:'GL',trainingWeight:100};
+ const input={...options(p),ownedSupports:D.supports.map(s=>({cardId:s.supportCardId,limitBreak:4,level:50}))};
+ const types=new Map(cards.filter(c=>c.limit_break===4).map(c=>[c.id,c.type]));
+ const count=d=>d.cards.filter(c=>types.get(c.id)===6).length;
+ const defaults=prepareDecks(input);assert.ok(defaults.some(d=>count(d)===0));assert.ok(defaults.some(d=>count(d)===1));assert.ok(defaults.every(d=>count(d)<=1));
+ const best=defaults.sort((a,b)=>b.training.score-a.training.score)[0];assert.ok(count(best)<=1);assert.equal(best.training.outingDays,count(best)*5);
+ const none=prepareDecks({...input,plan:{...p,maxOutingCards:0}});assert.ok(none.length);assert.ok(none.every(d=>count(d)===0));
+ const two=prepareDecks({...input,plan:{...p,maxOutingCards:2}});assert.ok(two.some(d=>count(d)===2));assert.ok(two.every(d=>count(d)<=2));
+});
+test('shared outings reduce a stat card’s gains, not just the Pal candidate’s gains',()=>{
+ const candidate=cards.find(c=>c.id===30028&&c.limit_break===4),fixed=[30052,30036,20021,20012,20031].map(id=>cards.find(c=>c.id===id&&c.limit_break===4));
+ const weights=trainingWeights(null,'GL');
+ const old=processCards([candidate],weights,fixed)[0],shared=processCards([candidate],{...weights,deckOutingDays:15},fixed)[0];
+ assert.ok(shared.score<old.score);assert.ok(shared.info.rainbow_gains[0]<old.info.rainbow_gains[0]);
+ const model=createTrainingModel({...emptyPlan(),scenario:'GL'},[]).evaluate([candidate,...fixed].map(c=>({id:c.id,limitBreak:4})));
+ assert.equal(model.outingDays,15);assert.equal(model.perCard.find(c=>c.id===candidate.id).score,shared.score);
+});
+test('a restrictive Pal cap reports infeasibility rather than returning a partial or illegal deck',()=>{
+ const p={...plan,maxOutingCards:0};
+ assert.throws(()=>prepareDecks({...options(p),ownedSupports:[30052,30036,20021,30028,20031].map(cardId=>({cardId,limitBreak:4,level:50}))}),/Pal\/Group limit/);
+});

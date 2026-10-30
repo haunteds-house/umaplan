@@ -1,10 +1,12 @@
-import {createTrainingModel,combinedScore} from './training.js';
+import {createTrainingModel,combinedScore,isOutingCard} from './training.js';
 import {baseId,pairNodes,baselineEvaluation,creationChance,summarizeChances,comparePairs} from './core.js';
 const tierName=n=>n===3?'gold':n===2?'upgraded':'white';
 const rank=s=>s?.rarity===2?3:s?.skillName?.endsWith('◎')?2:1;
 // Bounded skill-coverage search, not a training-stat simulator or an exhaustive solver.
 export function prepareDecks({plan,supports,ownedSupports,skills,links,characters=[]}) {
  const training=createTrainingModel(plan,characters),weight=Math.min(1,Math.max(0,Number(plan.trainingWeight??25)/100));
+ const maxOutings=Number.isInteger(plan.maxOutingCards)?Math.max(0,Math.min(6,plan.maxOutingCards)):1;
+ const outingCount=d=>d.cards.filter(isOutingCard).length;
  const wanted=plan.wanted,skillMap=new Map(skills.map(s=>[s.skillId,s]));
  const skillIds=wanted.map(id=>links.factorSkills?.[id]??[]);
  const sources=(kind,entityId)=>skillIds.map(ids=>{
@@ -24,13 +26,16 @@ export function prepareDecks({plan,supports,ownedSupports,skills,links,character
  const extend=(d,c)=>({cards:[...d.cards,c],tiers:d.tiers.map((t,i)=>Math.max(t,c.sources[i]?.tier??0)),quality:d.quality+training.standalone(c)});
  let beam=[seed];
  for(let slot=0;slot<5;slot++){
-  const next=new Map();for(const d of beam)for(const c of owned){if(d.cards.some(x=>x.charaId===c.charaId))continue;const x=extend(d,c),key=x.cards.map(c=>c.id).sort((a,b)=>a-b).join(',');if(!next.has(key))next.set(key,x);}
-  beam=[...next.values()].sort(order).slice(0,128);
+  const next=new Map();for(const d of beam)for(const c of owned){if(d.cards.some(x=>x.charaId===c.charaId)||outingCount(d)+(isOutingCard(c)?1:0)>maxOutings)continue;const x=extend(d,c),key=x.cards.map(c=>c.id).sort((a,b)=>a-b).join(',');if(!next.has(key))next.set(key,x);}
+  // Preserve alternatives with each outing count instead of letting
+  // high standalone event scores fill every shortlist position.
+  beam=[];for(let count=0;count<=Math.min(slot+1,maxOutings);count++)beam.push(...[...next.values()].filter(d=>outingCount(d)===count).sort(order).slice(0,64));
  }
  const profiles=new Map();
- for(const d of beam)for(const c of borrowed){if(d.cards.some(x=>x.charaId===c.charaId))continue;const x=extend(d,c),key=x.tiers.join(',')+'|'+x.cards.map(c=>c.type).sort().join(',');if(!profiles.has(key)||order(x,profiles.get(key))<0)profiles.set(key,x);}
- const decks=[...profiles.values()].sort(order).slice(0,64).map(d=>({...d,targetSources,training:training.evaluate(d.cards)}));
- if(!decks.length)throw Error('No legal five-owned + one-borrowed deck is available for this target.');
+ for(const d of beam)for(const c of borrowed){if(d.cards.some(x=>x.charaId===c.charaId)||outingCount(d)+(isOutingCard(c)?1:0)>maxOutings)continue;const x=extend(d,c),key=x.tiers.join(',')+'|'+x.cards.map(c=>c.type).sort().join(',');if(!profiles.has(key)||order(x,profiles.get(key))<0)profiles.set(key,x);}
+ const finalists=[];for(let count=0;count<=maxOutings;count++)finalists.push(...[...profiles.values()].filter(d=>outingCount(d)===count).sort(order).slice(0,32));
+ const decks=finalists.map(d=>({...d,targetSources,training:training.evaluate(d.cards)}));
+ if(!decks.length)throw Error('No legal five-owned + one-borrowed deck is available for this target and Pal/Group limit. Increase the limit or import more non-Pal cards.');
  return decks;
 }
 export function scorePairWithDeck(engine,plan,a,b,base,decks){

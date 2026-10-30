@@ -50,7 +50,7 @@ export function normalizeImport(input,filename,catalog) {
  return {kind,data,filename:String(filename),importedAt:new Date().toISOString()};
 }
 export function emptyNode() { return {cardId:0,sparks:[],wins:[],winsKnown:true,sourceId:null}; }
-export function emptyPlan() { return {name:'Untitled lineage',nodes:Array.from({length:15},emptyNode),wanted:[],bought:{},searchMode:'inherit',includeSupports:false,borrowSSR:true,scenario:'auto',autoScenarios:['URA','Aoharu','MANT','GL'],trainingFocus:'balanced',trainingWeight:25,deck:[],rolls:2,parentRaceBonus:false,pins:[false,false]}; }
+export function emptyPlan() { return {name:'Untitled lineage',nodes:Array.from({length:15},emptyNode),wanted:[],bought:{},searchMode:'inherit',includeSupports:false,borrowSSR:true,maxOutingCards:1,scenario:'auto',autoScenarios:['URA','Aoharu','MANT','GL'],trainingFocus:'balanced',trainingWeight:25,deck:[],rolls:2,parentRaceBonus:false,pins:[false,false]}; }
 export function placeVeteran(plan,index,v) {
  const copy=structuredClone(plan); const put=(i,n)=>{if(i<15)copy.nodes[i]={cardId:n.cardId,sparks:structuredClone(n.sparks),wins:[...n.wins],winsKnown:n.winsKnown,sourceId:n.id??null};};
  put(index,v);
