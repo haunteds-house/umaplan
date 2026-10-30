@@ -1,7 +1,7 @@
 import {Engine,scorePair,comparePairs,baseId} from './core.js';
 self.onmessage=({data})=>{
  try {
- const {affinity,factors,races,plan,veterans}=data,engine=new Engine(affinity,factors,races);
+ const {affinity,factors,races,links,plan,veterans}=data,engine=new Engine(affinity,factors,races,links);
  const eligible=veterans.filter(v=>baseId(v.cardId)!==baseId(plan.nodes[0].cardId));
  const locked=plan.pins.map((pin,i)=>pin?plan.nodes[i+1].sourceId:null);
  if(locked.some((id,i)=>plan.pins[i]&&!id))throw Error('Pinned parents must be imported veterans.');

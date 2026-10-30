@@ -8,10 +8,12 @@ A static, browser-local Umamusume collection and lineage planner, built for this
 - Browse trainees, supports, and veterans; search and sort; filter veteran sparks/stars, lineage scope, and aptitudes.
 - Inspect veteran stats, learned skills, ancestry, and memos; inspect support skill hints.
 - Build a 15-slot lineage with imported veterans or manually planned characters, sparks, and G1 wins. The first seven slots determine the selected target's odds; deeper slots record future breeding plans.
-- Search all eligible imported parent pairs in a cancellable worker, pin either parent, and require minimum inheritance percentages for multiple sparks. Rank by lowest desired chance, then sum of desired chances, then compatibility. No arbitrary candidate shortlist is used; only the best 40 results are displayed.
+- Search all eligible imported parent pairs in a cancellable worker, pin either parent, with multiple desired sparks in Inspiration or end-of-career Spark % mode. The minimum-chance setting is removed. Rank by lowest desired chance, then sum of desired chances, then compatibility. No arbitrary candidate shortlist is used; only the best 40 results are displayed.
 - Compare per-event and two-event inheritance odds, with separate conditional white-spark creation estimates.
 - Save/delete plan snapshots, export/import a single plan, and back up/restore the whole local workspace.
-- Search a bundled skill reference including activation expressions, effects, duration, and cooldown.
+- Browse skill cards with icons, effects, activation expressions, Sources and Variants; filter by category, rarity, condition, wit check, and owned sources.
+- View character portraits and support art in collections, lineage slots, pickers, and source panels. Candidate pickers preview affinity, including targets for an already-filled tree.
+- Set expected normal/upgraded/gold skills or Inspiration only. Scenario normal/plus sparks are interchangeable and counted once per ancestor.
 
 The implementation is independent: it does not embed either uma.guide or uma.moe, and does not include their application source. Public game-data snapshots and community formulas are attributed in [SOURCES.md](SOURCES.md).
 
@@ -19,13 +21,13 @@ The implementation is independent: it does not embed either uma.guide or uma.moe
 
 1. Open the deployed GitHub Pages site.
 2. Select **Import collection**, and choose the three umadump files at once.
-3. Select the target in **Lineage planner**.
-4. Add desired sparks and a minimum probability, then **Find parent pairs**.
+3. Optionally select the target in **Lineage planner**.
+4. Add desired sparks, choose Inspiration or Spark %, set learning assumptions, then **Find parent pairs**.
 5. Use a pair, inspect its lineage and odds, and save a named snapshot.
 
-No game MDB is needed for these features. Names and game mechanics use a bundled Global snapshot. New or unsupported IDs remain visible, but characters without compatibility entries cannot be automatically ranked. There is no complete Japanese-server catalog mode.
+No game MDB is needed for these features. Names and game mechanics use a bundled Global snapshot. New or unsupported IDs remain visible, but target-specific search excludes characters without compatibility entries. There is no complete Japanese-server catalog mode.
 
-Your imports stay in IndexedDB on the current browser and site origin. No telemetry, remote roster API, or third-party script is used. Export a backup before clearing browser data or moving devices. Backups include personal memos; do not commit them to this public repository.
+Your imports stay in IndexedDB on the current browser and site origin. No telemetry, remote roster API, or third-party script is used. Artwork loads from uma.guide with no referrer; its server receives image requests, never JSON files. Missing images fall back to initials. Export a backup before clearing browser data or moving devices. Backups include personal memos; do not commit them to this public repository.
 
 ## GitHub Pages
 
@@ -51,11 +53,11 @@ Open `http://localhost:8080`. Opening `index.html` through `file://` is unsuppor
 - Stat, aptitude, race, skill/scenario and unique base rates are respectively 70/80/90%, 1/3/5%, 1/2/3%, 3/6/9%, and 5/10/15% for 1/2/3 stars.
 - Each shared G1 group contributes +3 once per relationship. Parent-to-parent shared G1 bonuses default **off**, reflecting uma.guide's Global timeline note; the toggle enables the alternate rule. Both live planners' implementations may evolve independently of their explanatory text. See SOURCES.md.
 - The compatibility matrix covers 74 base characters. Outfit names cover 112 Global cards. Unknown compatibility is not silently scored as zero.
-- Automatic search requires both captured ancestors for each parent. Missing race history is flagged and may understate odds. No ancestors are invented from character names.
-- White-skill creation is a separate conditional model, `base × 1.1^copies`, with bases 20% / 25% / 40% for learned normal / upgraded / gold skills. Not every skill has all variants. The table does not establish that a variant exists or that the target can learn it, and does not predict stars.
+- Target-specific search requires both captured ancestors for each parent. Without a target, every source uses zero affinity, all race bonuses are omitted, and incomplete ancestry is ranked from recorded sparks only. This is an affinity-free baseline, not target-specific career odds. Missing race history is flagged and may understate odds. No ancestors are invented from character names.
+- White-skill creation is a separate conditional model, `base × 1.1^copies`, with bases 20% / 25% / 40% for learned normal / upgraded / gold skills. Not every skill has all variants. The selector offers known skill-family tiers, but learning from the career remains a user assumption. Inspiration-only multiplies normal creation chance by inheritance probability. Non-skill sparks retain inheritance probabilities in Spark % mode. Normal/plus sources count once per ancestor, preferring the exact form when both are present. The comparison table is conditional and does not predict stars.
 - The app is not a race simulator or an implementation of every feature of either reference site. Support ownership is imported and browsable; support-deck optimization and team trials are outside this initial scope.
 - Best-pair search is exhaustive and quadratic. Large rosters may take time; search runs off the main UI thread and can be cancelled.
 
 ## Validation
 
-`npm test` covers export normalization, encoded stars, invalid/duplicate records, captured ancestry, same-character restrictions, independent probability rolls, shared-G1 grouping, missing compatibility, probability thresholds, and the alternate race rule. The browser preview was inspected; the automated file-picker harness stalled, so a real-user import remains an explicit verification limit. No personal roster was available during development.
+`npm test` runs 18 checks covering imports, ancestry, compatibility, independent probabilities, scenario aliases, gold/inspiration assumptions, target-free ranking, source integrity, and the search worker including pins. The production build passes. Browser checks covered synthetic JSON imports, affinity previews, learning controls, skill search, Sources, Variants, and artwork. No personal roster was available during development.

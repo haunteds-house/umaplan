@@ -50,7 +50,7 @@ export function normalizeImport(input,filename,catalog) {
  return {kind,data,filename:String(filename),importedAt:new Date().toISOString()};
 }
 export function emptyNode() { return {cardId:0,sparks:[],wins:[],winsKnown:true,sourceId:null}; }
-export function emptyPlan() { return {name:'Untitled lineage',nodes:Array.from({length:15},emptyNode),wanted:[],minChance:0,rolls:2,parentRaceBonus:false,pins:[false,false]}; }
+export function emptyPlan() { return {name:'Untitled lineage',nodes:Array.from({length:15},emptyNode),wanted:[],bought:{},searchMode:'inherit',rolls:2,parentRaceBonus:false,pins:[false,false]}; }
 export function placeVeteran(plan,index,v) {
  const copy=structuredClone(plan); const put=(i,n)=>{if(i<15)copy.nodes[i]={cardId:n.cardId,sparks:structuredClone(n.sparks),wins:[...n.wins],winsKnown:n.winsKnown,sourceId:n.id??null};};
  put(index,v);
@@ -74,7 +74,8 @@ export function validateTree(nodes) {
  return problems;
 }
 export class Engine {
- constructor(affinity,factors,races) {
+ constructor(affinity,factors,races,links={}) {
+  this.links=links;
   this.data=affinity;this.size=affinity.chars.length;this.index=new Map(affinity.chars.map((id,i)=>[id,i]));
   if(affinity.aff2.length!==this.size**2||affinity.aff3.length!==this.size**3)throw Error('Incomplete compatibility data.');
   this.factors=new Map(factors.map(f=>[Number(f.id),f]));this.races=races;
@@ -109,12 +110,18 @@ export class Engine {
  }
  odds(nodes,evaluation,rolls=2) {
   const sources=new Map();
-  nodes.slice(1,7).forEach((n,i)=>n.sparks.forEach(f=>{
-   const meta=this.factors.get(f.id);if(!meta)return;
-   const p=sparkProbability(meta.type,f.stars,evaluation.slots[i+1]);
-   if(p===null)return;
-   const a=sources.get(f.id)??[];a.push({slot:i+1,stars:f.stars,p});sources.set(f.id,a);
-  }));
+  const present=new Set(nodes.slice(1,7).flatMap(n=>n.sparks.map(f=>f.id)));
+  for(const id of [...present])for(const alias of this.links.factorAliases?.[id]??[])present.add(alias);
+  for(const id of present){
+   const meta=this.factors.get(id);if(!meta)continue;
+   const aliases=this.links.factorAliases?.[id]??[id];
+   nodes.slice(1,7).forEach((n,i)=>{
+    // One contribution per ancestor, including when both scenario forms exist.
+    const f=n.sparks.find(f=>f.id===id)??n.sparks.filter(f=>aliases.includes(f.id)).sort((a,b)=>b.stars-a.stars)[0];
+    if(!f)return;const p=sparkProbability(meta.type,f.stars,evaluation.slots[i+1]);if(p===null)return;
+    const a=sources.get(id)??[];a.push({slot:i+1,stars:f.stars,p});sources.set(id,a);
+   });
+  }
   return [...sources].map(([id,src])=>{
    const ps=src.flatMap(s=>Array(rolls).fill(s.p));const d=distribution(ps);
    return {id,sources:src,copies:src.length,stars:src.reduce((a,s)=>a+s.stars,0),chance:1-d[0],twice:1-d[0]-(d[1]??0),expected:ps.reduce((a,p)=>a+p,0)};
@@ -135,13 +142,21 @@ export function pairNodes(target,a,b) {
  for(const [p,v] of [[1,a],[2,b]])for(let side=0;side<2;side++){const gp=v.parents?.find(x=>x.position===(side?20:10));if(gp)n[p*2+1+side]=gp;}
  return n;
 }
+export function baselineEvaluation(nodes) {
+ return {total:0,slots:Array(7).fill(0),branches:[{direct:0,triples:0,race:0},{direct:0,triples:0,race:0}],pair:0,pairRace:0,complete:!validateTree(nodes).length,issues:['No target: affinity-free baseline. Only recorded ancestor sparks are counted; these are not target-specific career odds.']};
+}
+export function desiredChance(engine,plan,id,odds) {
+ const row=odds.find(o=>o.id===id),inherit=row?.chance??0;
+ if(plan.searchMode!=='sparkgen'||engine.factors.get(id)?.type!==3)return inherit;
+ const bought=plan.bought?.[id]??{};
+ return creationChance(row?.copies??0,bought.inspirationOnly?'white':bought.tier)*(bought.inspirationOnly?inherit:1);
+}
 export function scorePair(engine,plan,a,b) {
  if(baseId(a.cardId)===baseId(b.cardId)||[a,b].some(x=>baseId(x.cardId)===baseId(plan.nodes[0].cardId)))return null;
- const nodes=pairNodes(plan.nodes[0],a,b),ev=engine.evaluate(nodes,plan.parentRaceBonus);
+ const nodes=pairNodes(plan.nodes[0],a,b),ev=plan.nodes[0].cardId?engine.evaluate(nodes,plan.parentRaceBonus):baselineEvaluation(nodes);
  if(!ev.complete)return null;
- const odds=engine.odds(nodes,ev,plan.rolls),m=new Map(odds.map(o=>[o.id,o.chance]));
- const chances=plan.wanted.map(id=>m.get(id)??0);
- if(chances.some(c=>c*100+1e-9<plan.minChance))return null;
- return {a:a.id,b:b.id,total:ev.total,min:chances.length?Math.min(...chances):0,sum:chances.reduce((s,c)=>s+c,0),chances};
+ const odds=engine.odds(nodes,ev,plan.rolls);
+ const chances=plan.wanted.map(id=>desiredChance(engine,plan,id,odds));
+ return {a:a.id,b:b.id,total:ev.total,baseline:!plan.nodes[0].cardId,min:chances.length?Math.min(...chances):0,sum:chances.reduce((s,c)=>s+c,0),chances};
 }
 export const comparePairs=(a,b)=>b.min-a.min||b.sum-a.sum||b.total-a.total||String(a.a).localeCompare(String(b.a))||String(a.b).localeCompare(String(b.b));

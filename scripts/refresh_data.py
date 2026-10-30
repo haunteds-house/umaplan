@@ -10,6 +10,7 @@ import pathlib
 import re
 import subprocess
 import tempfile
+from skill_links import build_links
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
@@ -61,6 +62,13 @@ def main():
             if s['win_saddle_type'] == 3:
                 races[str(s['saddle_id'])] = {'group': s['group_id'], 'name': race['name']}
     data.update(extracted); data['races'] = races
+    app_path = re.search(r'(?:src|href)="([^" ]*/app\.[^" ]+\.js)"', page)
+    if not app_path: raise RuntimeError('App bundle missing for event dataset discovery.')
+    app = fetch('https://uma.guide' + app_path[1]).decode()
+    event_path = re.search(r'\./chunks/(event-rewards-data\.[^" ]+\.js)', app)
+    if not event_path: raise RuntimeError('Event rewards bundle missing.')
+    event_url = 'https://uma.guide/assets/chunks/' + event_path[1]
+    data['skill-links'] = build_links(data, bundle, fetch(event_url).decode())
     data['metadata'] = {'region': 'Global', 'retrieved': datetime.date.today().isoformat(), 'guideBundle': url, 'moeVersion': manifest['version'], 'counts': {n: len(data[n]) for n in ['characters', 'supports', 'skills', 'factors']}}
     for name, value in data.items():
         (ROOT / 'data' / (name + '.json')).write_text(json.dumps(value, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
