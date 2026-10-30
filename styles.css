@@ -19,3 +19,15 @@
 .veteran-search pre { white-space:pre-wrap; overflow-wrap:anywhere; padding:12px; background:var(--cream,#f8f8f4); font-size:13px; }
 .preset-row { border-top:1px solid var(--line,#ddd); padding-top:14px; }
 @media(max-width:650px){.search-rule .grow {flex-basis:100%}.preset-row label{width:100%}.veteran-search .toolbar{align-items:stretch}}
+
+.advanced-group { border:1px solid #b5c7b6; border-left:4px solid #53795e; border-radius:9px; margin:16px 0; padding:16px; min-width:0; background:#f7faf6; }
+.advanced-group .advanced-group { margin-left:16px; background:#fff; }
+.advanced-group.excluded { border-color:#b26856; }
+.advanced-group legend { padding:0 8px; font-size:13px; font-weight:700; }
+.advanced-shortcuts { display:flex; flex-wrap:wrap; gap:8px; }
+.match-deck { display:grid; grid-template-columns:repeat(3,minmax(105px,1fr)); gap:10px; min-width:370px; margin:12px 0; }
+.deck-card { font-weight:400; font-size:11px; white-space:normal; }
+.deck-card .art { display:block; width:62px; height:82px; margin-bottom:5px; }
+.training-controls { display:grid; gap:12px; margin:14px 0; }
+.training-summary { margin-top:12px; padding:10px; border-radius:8px; background:#eaf1dc; font-weight:400; white-space:normal; }
+@media(max-width:650px){.advanced-group{padding:10px}.advanced-group .advanced-group{margin-left:5px}.match-deck{min-width:300px}}

@@ -1,9 +1,13 @@
 import {baseId,grades} from './core.js';
 const norm=s=>String(s).trim().toLowerCase().replace(/[_\s]+/g,' ').replace(/\s*-\s*/g,'-');
 const list=x=>Array.isArray(x)?x:[x];
-export const emptySearch=()=>({mode:'basic',text:'',rules:[],join:'and',uql:'',sort:'Rating',target:0});
-export function cleanSearch(s={}){return {...emptySearch(),mode:['basic','advanced','uql'].includes(s.mode)?s.mode:'basic',text:String(s.text??'').slice(0,300),rules:(Array.isArray(s.rules)?s.rules:[]).slice(0,60).map(r=>({scope:String(r.scope??''),field:String(r.field??'Speed'),op:String(r.op??'>='),value:String(r.value??'3'),copies:!!r.copies})),join:s.join==='or'?'or':'and',uql:String(s.uql??'').slice(0,12000),sort:String(s.sort??'Rating'),target:Number(s.target)||0};}
-export function visualQuery(s){return s.rules.map(r=>`(${r.scope?r.scope+' ':''}${r.field} ${r.op} ${r.copies?Number(r.value)+'x':Number.isFinite(Number(r.value))&&r.value.trim()?Number(r.value):JSON.stringify(r.value)})`).join(` ${s.join} `);}
+export const emptySearch=()=>({mode:'basic',text:'',rules:[],join:'and',advanced:null,uql:'',sort:'Rating',target:0});
+const cleanRule=r=>({scope:String(r.scope??''),field:String(r.field??'Speed'),op:String(r.op??'>='),value:String(r.value??'3'),copies:!!r.copies});
+export function cleanGroup(g,depth=0,budget={left:60}){return {join:g?.join==='or'?'or':'and',not:!!g?.not,children:depth>=5?[]:(Array.isArray(g?.children)?g.children:[]).filter(()=>budget.left-->0).map(c=>Array.isArray(c?.children)?cleanGroup(c,depth+1,budget):cleanRule(c??{}))};}
+export function cleanSearch(s={}){const rules=(Array.isArray(s.rules)?s.rules:[]).slice(0,60).map(cleanRule);return {...emptySearch(),mode:['basic','advanced','uql'].includes(s.mode)?s.mode:'basic',text:String(s.text??'').slice(0,300),rules,advanced:s.advanced?cleanGroup(s.advanced):s.mode==='advanced'?cleanGroup({join:s.join,children:rules}):null,join:s.join==='or'?'or':'and',uql:String(s.uql??'').slice(0,12000),sort:String(s.sort??'Rating'),target:Number(s.target)||0};}
+const ruleQuery=r=>{const value=x=>Number.isFinite(Number(x))&&x.trim()?Number(x):JSON.stringify(x);return `(${r.scope?r.scope+' ':''}${r.field} ${r.op} ${['in','not in','has all','has any'].includes(r.op)?'('+r.value.split(',').map(x=>value(x.trim())).join(', ')+')':r.copies?Number(r.value)+'x':value(r.value)})`;};
+export function groupQuery(g){const children=g.children.map(c=>Array.isArray(c.children)?groupQuery(c):ruleQuery(c)).filter(Boolean);return children.length?`${g.not?'not ':''}(${children.join(` ${g.join} `)})`:'';}
+export function visualQuery(s){return s.mode==='advanced'&&s.advanced?groupQuery(s.advanced):s.rules.map(ruleQuery).join(` ${s.join} `);}
 export function createVeteranSearch(D,engine){
  const factors=new Map(D.factors.map(f=>[norm(f.text),f]));
  const fields=new Map();

@@ -1,7 +1,9 @@
+import {prepareDecks,scorePairWithDeck} from './deck.js';
 import {Engine,scorePair,comparePairs,baseId} from './core.js';
 self.onmessage=({data})=>{
  try {
  const {affinity,factors,races,links,plan,veterans}=data,engine=new Engine(affinity,factors,races,links);
+ const decks=plan.includeSupports?prepareDecks({plan,supports:data.supports??[],ownedSupports:data.ownedSupports??[],skills:data.skills??[],characters:data.characters??[],links}):null;
  const eligible=veterans.filter(v=>baseId(v.cardId)!==baseId(plan.nodes[0].cardId));
  const locked=plan.pins.map((pin,i)=>pin?plan.nodes[i+1].sourceId:null);
  if(locked.some((id,i)=>plan.pins[i]&&!id))throw Error('Pinned parents must be imported veterans.');
@@ -11,7 +13,8 @@ self.onmessage=({data})=>{
  for(let i=0;i<left.length;i++)for(let j=0;j<right.length;j++){
   checked++;
   if(left[i].id===right[j].id||(!locked[0]&&!locked[1]&&j<=i))continue;
-  const score=scorePair(engine,plan,left[i],right[j]);
+  let score=scorePair(engine,plan,left[i],right[j]);
+  if(score&&decks)score=scorePairWithDeck(engine,plan,left[i],right[j],score,decks);
   if(score){matched++;top.push(score);top.sort(comparePairs);if(top.length>40)top.pop();}
   if(checked%2000===0)self.postMessage({type:'progress',checked,total});
  }

@@ -57,3 +57,21 @@ No private game files, account exports, credentials, or external site applicatio
   independent outcomes and identical repeated attempts. Individual probabilities
   remain based on the existing community model; the arithmetic mean is not used
   as the probability of obtaining a complete result.
+
+## Training-value integration
+
+- https://github.com/Euophrys/umamusume-tierlist at
+  `a405c452f2b086c5d2e5f25626714756a79291a9` (MIT, Amber Flina).
+- The original calculator, event assumptions, Global card records and scenario
+  presets are bundled under `vendor/tierlist/`, including the license.
+- The adapter passes the selected trainee's five growth multipliers into the
+  expected-gain calculation. Each complete deck is scored card by card with its
+  other five cards fixed. These marginal scores are summed as a relative index;
+  this is not an additive prediction of final career stats.
+- Scenario presets include assumed races, bonding pace, training gains, scenario
+  bonuses and event outcomes. The upstream defaults are community assumptions.
+  Automatic selection compares enabled presets using common stat valuations.
+- Owned cards are modeled at the level cap for their imported limit-break level,
+  not their potentially lower current level. Borrowed cards use MLB values.
+  Missing model records are shown as unavailable; they are not assigned guessed
+  effects. The model's reference numerical test is retained in our test suite.

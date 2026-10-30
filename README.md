@@ -104,3 +104,55 @@ are not inferred, so this is an estimate, not a guarantee. No desired sparks giv
 “—”; any impossible outcome gives zero joint chance and infinite expected runs.
 In one-event mode, the estimate covers that event rather than both career events.
 These summaries do not change the existing weakest-spark-first ranking.
+
+## Parent matches & deck
+
+Enable **Include support cards** to search parent pairs together with legal decks
+of exactly five owned cards and one borrowed card. By default the borrowed card
+is an MLB SSR; uncheck SSR-only to allow other rarities. Duplicate support
+characters and supports of the target trainee are excluded. Without a target,
+recheck deck legality after choosing one. At least five legal owned support
+characters are required.
+
+For desired skill sparks, deck mode calculates end-of-career creation chances:
+known hints/events or target-character skill sources allow learning a listed
+white/◎/gold version; otherwise learning requires inspiration from the selected
+lineage. Inspiration-only flags override those sources. A veteran's learned skill
+list alone cannot pass skills on. Non-skill spark columns remain inheritance
+probabilities. Skill-source access is conditional: hint RNG, event completion,
+skill points and awakening unlocks are not modeled as guaranteed.
+
+**Training scenario** defaults to Automatic, choosing the highest modeled index
+among scenarios you enabled. URA, Aoharu, Make a New Track and Grand Live are enabled
+initially; Grand Masters is opt-in. A manual scenario overrides that list. Enable
+only scenarios available in your game. Training focus changes common stat values;
+target growth rates affect the underlying gains. No target uses neutral growth.
+
+The training index uses the MIT-licensed Euophrys calculator, evaluated six times
+per deck with the other five cards fixed. It assumes owned cards are leveled to
+the cap at their current LB and borrowed cards are MLB/max level. The result is a
+relative expectation index, not final stats or a guaranteed best career. Source
+provenance and license are in `vendor/tierlist/README.md`.
+
+The default ranking is 75% skill outcome quality and 25% training value. Change
+**Training-value weight** to emphasize either. Skill quality is the mean of the
+weakest desired chance and the average desired chance. Training is normalized
+as `index / (index + 3000)`. This weighting is an explicit planning heuristic;
+it does not alter the displayed spark probabilities. Setting training weight to
+zero restores skill-first comparison. With no desired outcomes, training alone
+breaks the choice (chance summaries remain unavailable).
+
+Deck search is bounded: a beam of 128 partial owned decks, then up to 64 distinct
+skill/type profiles with a borrowed card, evaluated against each parent pair.
+It is not exhaustive and may miss better decks. Card levels, skill coverage,
+scenario comparisons and individual marginal contributions are shown in results.
+**Use pair** also saves the suggested support deck and model result in the plan.
+
+## Advanced search groups
+
+Basic keeps its simple flat rules. Advanced now has its own nested AND/OR groups,
+NOT exclusions, comma-separated membership values, and shortcuts for stats,
+aptitudes, characters, races and learned skills. First use copies Basic rules;
+afterwards each mode retains its own draft. **Copy Basic rules** explicitly
+replaces the Advanced draft. **Edit as UQL** serializes the active builder,
+including grouping and negation. Presets preserve the whole grouped expression.
